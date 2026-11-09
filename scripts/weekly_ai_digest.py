@@ -157,7 +157,7 @@ Return ONLY valid JSON with this schema:
  "watch_next_week": ["clearly labelled watch items; do not imply confirmed events"],
  "bottom_line":"one concise takeaway"
 }
-Use no more than 12 top developments. Each url MUST be copied exactly from a supplied item.
+Use no more than 12 top developments. Each url MUST be copied exactly from a supplied item. Preserve each selected item's evidence_level, corroboration_count, importance_score, and importance_band exactly. Do not describe corroboration as proof or first-party provenance as independent fact-checking.
 Feed items:
 """ + json.dumps(updates, ensure_ascii=False)
 
@@ -223,10 +223,10 @@ def validate_digest(digest: Any, updates: list[dict[str, str]]) -> dict[str, Any
             "summary": summary[:900],
             "why_it_matters": str(entry.get("why_it_matters", "Implications are uncertain."))[:500],
             "url": url,
-            "evidence_level": str(entry.get("evidence_level", allowed_items[url].get("evidence_level", "unknown"))),
-            "corroboration_count": int(entry.get("corroboration_count", allowed_items[url].get("corroboration_count", 1))),
-            "importance_score": int(entry.get("importance_score", allowed_items[url].get("importance_score", 0))),
-            "importance_band": str(entry.get("importance_band", allowed_items[url].get("importance_band", "emerging"))),
+            "evidence_level": str(allowed_items[url].get("evidence_level", "unknown")),
+            "corroboration_count": int(allowed_items[url].get("corroboration_count", 1)),
+            "importance_score": int(allowed_items[url].get("importance_score", 0)),
+            "importance_band": str(allowed_items[url].get("importance_band", "emerging")),
         })
     digest["top_developments"] = clean_entries
     for field in ("company_notes", "watch_next_week"):
