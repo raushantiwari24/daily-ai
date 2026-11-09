@@ -4,7 +4,36 @@ import re, urllib.parse, xml.etree.ElementTree as ET
 from datetime import datetime, timezone, timedelta
 from email.utils import parsedate_to_datetime
 from typing import Any
-from weekly_ai_digest import request, clean_text, parse_date, WINDOW_DAYS
+import html, time, urllib.error, urllib.request
+from datetime import timedelta
+WINDOW_DAYS = 7
+
+def request(url: str, timeout: int = 30) -> bytes:
+    req = urllib.request.Request(url, headers={"User-Agent": "WeeklyAIIntelligenceBot/3.0"})
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as response:
+                return response.read()
+        except (urllib.error.URLError, TimeoutError):
+            if attempt == 2: raise
+            time.sleep(2 ** attempt)
+
+def clean_text(value: str) -> str:
+    return re.sub(r"\\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
+
+def parse_date(value: str):
+    if not value: return None
+    try:
+        from email.utils import parsedate_to_datetime
+        dt = parsedate_to_datetime(value)
+        if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except Exception:
+        try:
+            dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            if dt.tzinfo is None: dt = dt.replace(tzinfo=timezone.utc)
+            return dt.astimezone(timezone.utc)
+        except Exception: return None
 
 SOURCES = [
     ("OpenAI", "https://openai.com/news/rss.xml", "primary"),
