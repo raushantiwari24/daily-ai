@@ -19,7 +19,7 @@ def request(url: str, timeout: int = 30) -> bytes:
             time.sleep(2 ** attempt)
 
 def clean_text(value: str) -> str:
-    return re.sub(r"\\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
+    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", html.unescape(value or ""))).strip()
 
 def parse_date(value: str):
     if not value: return None
