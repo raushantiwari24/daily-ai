@@ -1,12 +1,12 @@
 # Weekly AI Intelligence Digest
 
-This workflow collects AI-industry news every Sunday at **9:00 AM India Standard Time**, summarizes the collected feed records with Gemini 3.5 Flash-Lite, validates generated citations against those records, and creates a dated child page under the AI Intelligence Hub in Notion.
+This workflow collects AI-industry updates every Sunday at **9:00 AM India Standard Time** from first-party publisher feeds and arXiv research feeds, supplements discovery with Google News RSS, computes evidence labels and priority signals, summarizes with Gemini 3.5 Flash-Lite, validates source URLs and dates, and creates a dated child page under the AI Intelligence Hub in Notion.
 
 ## Monitored organizations
 
 OpenAI, Anthropic, Google / Gemini, Google DeepMind, xAI / Grok, Meta / Llama, DeepSeek, Mistral AI, Microsoft, NVIDIA, and Hugging Face.
 
-Discovery currently uses domain-restricted Google News RSS queries. This improves coverage across publishers but is not equivalent to reading and independently verifying every original article.
+Primary ingestion currently uses direct RSS/Atom feeds from OpenAI, Google AI, Google DeepMind, Google Research, Hugging Face, NVIDIA, AWS Machine Learning, Microsoft Research, and arXiv cs.AI/cs.LG. Google News RSS remains a secondary discovery fallback. Feed coverage is not exhaustive.
 
 ## Required GitHub Actions secrets
 
@@ -29,11 +29,13 @@ Open **Actions → Weekly AI Intelligence Digest → Run workflow**, select `mai
 
 ## Reliability notes
 
-- The collector deduplicates titles and keeps a rolling seven-day window.
-- Gemini output is checked for required fields.
-- Each published development must cite an exact URL from the collected feed, and its date must match the source record.
+- The collector uses a rolling seven-day window across curated first-party and research feeds, plus secondary discovery.
+- Developments receive first-party, research-source, or secondary evidence labels.
+- Headline similarity and distinct hostnames provide a corroboration signal; this is heuristic and does not establish independent confirmation.
+- A deterministic 0-100 score prioritizes source type, topic relevance, recency, and corroboration. It is not a truth score.
+- Gemini output is checked for required fields. Each published development must cite an exact URL from the collected feed, and its date and evidence metadata are taken from the source record.
 - Transient HTTP failures receive bounded retries.
-- These checks validate structure and provenance, not the truth of every generated sentence. Always open primary sources before relying on claims.
+- These checks validate structure and provenance, not the truth of every generated sentence. Corroboration counts do not verify claim-level accuracy. Always open primary sources before relying on claims.
 - Google News RSS can miss relevant stories or surface syndicated coverage.
 - Gemini free-tier quotas and model availability depend on Google's current account limits. Do not enable paid billing if you intend to keep API usage free.
 
