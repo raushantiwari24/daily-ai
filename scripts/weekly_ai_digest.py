@@ -18,7 +18,7 @@ from typing import Any
 
 NOTION_PARENT_PAGE_ID = "41362a3c60c981bfa39ae0849bd70975"
 NOTION_VERSION = "2022-06-28"
-GEMINI_MODEL = "gemini-2.5-flash-lite"
+GEMINI_MODEL = "gemini-3.5-flash-lite"
 WINDOW_DAYS = 7
 MAX_PER_COMPANY = 6
 
