@@ -15,6 +15,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 
 from source_registry import collect_intelligence
+from evidence_checks import assess_summary_support
 from datetime import datetime, timedelta, timezone
 from html import unescape
 from typing import Any
@@ -240,6 +241,7 @@ def validate_digest(digest: Any, updates: list[dict[str, str]]) -> dict[str, Any
             "corroboration_count": int(allowed_items[url].get("corroboration_count", 1)),
             "importance_score": int(allowed_items[url].get("importance_score", 0)),
             "importance_band": str(allowed_items[url].get("importance_band", "emerging")),
+            **assess_summary_support(summary, allowed_items[url].get("title", ""), allowed_items[url].get("description", "")),
         })
     digest["top_developments"] = clean_entries
     for field in ("company_notes", "watch_next_week"):
@@ -288,6 +290,7 @@ def publish_to_notion(digest: dict[str, Any], updates_count: int) -> str:
         if url not in valid_urls:
             continue
         label = f"{entry.get('title', 'Update')} | {entry.get('company', 'Company')} | {entry.get('date', 'Date')} | {entry.get('importance_band', 'emerging').upper()} ({entry.get('importance_score', 0)}/100) | {entry.get('evidence_level', 'unknown')} evidence | {entry.get('corroboration_count', 1)} source domain(s)"
+        label += f" | snippet overlap: {entry.get('status', 'not assessed')} ({entry.get('score', 0)}%)"
         blocks.append(bullet(label, url))
         summary = str(entry.get("summary", "")).strip()
         if summary:
