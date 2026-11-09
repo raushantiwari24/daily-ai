@@ -1,0 +1,8 @@
+[project]
+name = "frontiershift"
+version = "0.1.0"
+description = "Source-backed AI ecosystem intelligence"
+requires-python = ">=3.12"
+
+[tool.vercel]
+entrypoint = "api.news:handler"
