@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import random
 import re
 import sys
 import time
@@ -42,9 +43,10 @@ def request(url: str, *, data: bytes | None = None, headers: dict[str, str] | No
             method: str = "GET", timeout: int = 30) -> bytes:
     """HTTP helper with bounded retries and actionable API error messages."""
     retryable = {429, 500, 502, 503, 504}
-    for attempt in range(4):
+    max_attempts = 5
+    for attempt in range(max_attempts):
         req = urllib.request.Request(
-            url, data=data, headers=headers or {"User-Agent": "WeeklyAIIntelligenceBot/2.0"},
+            url, data=data, headers=headers or {"User-Agent": "WeeklyAIIntelligenceBot/3.0"},
             method=method,
         )
         try:
@@ -52,16 +54,27 @@ def request(url: str, *, data: bytes | None = None, headers: dict[str, str] | No
                 return response.read()
         except urllib.error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")[:1200]
-            if exc.code in retryable and attempt < 3:
-                time.sleep(min(2 ** attempt, 8))
+            if exc.code in retryable and attempt < max_attempts - 1:
+                retry_after = exc.headers.get("Retry-After")
+                try:
+                    delay = min(float(retry_after), 90) if retry_after else min(8 * (2 ** attempt), 60)
+                except (TypeError, ValueError):
+                    delay = min(8 * (2 ** attempt), 60)
+                delay += random.uniform(0, min(3, delay * 0.15))
+                print(f"[RETRY] HTTP {exc.code} from {urllib.parse.urlsplit(url).netloc}; "
+                      f"attempt {attempt + 1}/{max_attempts}, waiting {delay:.1f}s.")
+                time.sleep(delay)
                 continue
             raise RuntimeError(
                 f"HTTP {exc.code} from {urllib.parse.urlsplit(url).netloc}: {detail}"
             ) from exc
         except (urllib.error.URLError, TimeoutError) as exc:
-            if attempt == 3:
+            if attempt == max_attempts - 1:
                 raise RuntimeError(f"Network request failed for {urllib.parse.urlsplit(url).netloc}: {exc}") from exc
-            time.sleep(min(2 ** attempt, 8))
+            delay = min(5 * (2 ** attempt), 45) + random.uniform(0, 2)
+            print(f"[RETRY] Network issue for {urllib.parse.urlsplit(url).netloc}; "
+                  f"attempt {attempt + 1}/{max_attempts}, waiting {delay:.1f}s.")
+            time.sleep(delay)
     raise RuntimeError("HTTP request exhausted retries.")
 
 def parse_date(value: str) -> datetime | None:
