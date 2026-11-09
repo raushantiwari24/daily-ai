@@ -1,0 +1,33 @@
+name: Weekly AI Intelligence Digest
+
+on:
+  schedule:
+    # Every Sunday at 9:00 AM India Standard Time (03:30 UTC).
+    - cron: "30 3 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-ai-intelligence-digest
+  cancel-in-progress: false
+
+jobs:
+  publish-digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate and publish the weekly digest
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: python scripts/weekly_ai_digest.py
