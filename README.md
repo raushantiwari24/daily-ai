@@ -1,94 +1,126 @@
-# AI Intelligence Digest
+# FrontierShift
 
-An automated weekly AI-industry intelligence pipeline that ingests first-party publisher feeds and research feeds, uses secondary news discovery for coverage gaps, computes transparent evidence and priority signals, uses Gemini to synthesize a briefing, validates source provenance, and publishes the result to Notion. It also builds an explainable AI Ecosystem Change Graph and upserts selected events into a longitudinal Notion ledger.
+**An AI ecosystem intelligence platform.** FrontierShift collects recent updates from AI research labs, infrastructure companies, and research feeds, then organizes them into a source-linked editorial view with transparent topic and priority signals.
 
-**Schedule:** Sundays at 9:00 AM India Standard Time (03:30 UTC)  
-**Output:** A dated page in the connected Notion workspace  
-**Status:** Working prototype with automated structural validation. Source claims still require human review.
+The project combines a Python feed-ingestion API, a responsive editorial website, and a separate scheduled research-digest workflow.
 
-## What it does
+## Product
 
-1. Ingests rolling seven-day updates from direct publisher feeds (OpenAI, Google AI, DeepMind, Google Research, Hugging Face, NVIDIA, AWS ML, Microsoft Research) and arXiv research feeds.
-2. Uses Google News RSS as a secondary discovery layer, not as primary evidence.
-3. Normalizes dates and URLs, then computes headline-similarity clusters, distinct-host corroboration counts, evidence labels, and a transparent 0-100 prioritization heuristic.
-4. Sends the source records and evidence metadata to Gemini 3.5 Flash-Lite for synthesis.
-5. Validates response structure, exact source URLs, and dates before publication.
-6. Applies a conservative lexical-overlap triage check between generated summaries and feed title/description snippets. This flags weakly supported wording; it is not factual verification.
-7. Builds topic co-occurrence signals across publishers, exposing where multiple organizations are active in the same capability areas.
-8. Upserts selected developments into the Notion AI Updates Tracker using stable event keys, updating repeat observations instead of blindly duplicating them.
-9. Publishes the digest, ecosystem graph signals, evidence labels, priority bands, and source links to Notion.
+The public website is designed around three jobs:
 
-## Monitored organizations
+- **Discover:** browse and search recent AI developments, filtered by topic.
+- **Understand:** see which topics appear across multiple monitored publishers and review each publisher's recent activity.
+- **Verify:** open the original publisher or research source. Every story links to its source.
 
-OpenAI, Anthropic, Google / Gemini, Google DeepMind, xAI / Grok, Meta / Llama, DeepSeek, Mistral AI, Microsoft, NVIDIA, and Hugging Face.
+The interface uses a bright, restrained visual system with generous whitespace, precise typography, subtle depth, and responsive layouts. It takes inspiration from premium product editorial design without copying Apple's brand assets or page layouts.
 
-## Differentiating capability: AI Ecosystem Change Graph\n\nThe graph converts feed records into stable event keys, a transparent topic taxonomy, company-topic profiles, and cross-publisher convergence signals. It answers questions such as which capability areas multiple monitored organizations are publishing about in the same collection window. It does not infer coordination, causation, market leadership, or future outcomes.\n\nSelected digest developments are upserted into the Notion AI Updates Tracker. A stable event key allows recurring observations to update the same event record, while preserving the original announcement date and recording the latest observation date.\n\n## Architecture
+## Current architecture
 
-```text
-GitHub Actions (weekly schedule / manual run)
-                 |
-                 v
-      Google News RSS discovery
-                 |
-                 v
-       Normalize + deduplicate
-                 |
-                 v
-        Gemini 3.5 Flash-Lite
-                 |
-                 v
-   Schema + source URL/date validation
-                 |
-                 v
-       Notion API page publishing
-```
+\`\`\`text
+Browser
+  |
+  v
+Vercel static site: public/index.html
+  |
+  v
+/api/news  (Python serverless function)
+  |
+  +--> Official publisher RSS / Atom feeds
+  |
+  +--> Research feeds (arXiv cs.AI, cs.LG)
+  |
+  v
+Normalize + date filter + deduplicate
+  |
+  +--> Topic tagging
+  +--> Transparent priority heuristic
+  +--> Cross-publisher topic overlap
+  |
+  v
+JSON response + 10-minute instance cache
+  |
+  v
+FrontierShift editorial interface
+\`\`\`
 
-## Reliability and known limitations
+A separate GitHub Actions workflow continues to run the weekly AI digest and Notion archive. Notion is not required by the public website.
 
-- **Citation integrity:** A generated development is only retained when its URL exactly matches a collected feed item and its date matches that item.
-- **Not independent fact-checking:** A matching URL proves provenance to a feed record, not that every sentence in the AI summary is true. The lexical-overlap check is a triage heuristic, not semantic entailment or truth verification. Human review of original sources remains necessary.
-- **Source coverage:** First-party feeds are curated, not exhaustive. Feed outages and publisher format changes can reduce coverage. Secondary Google News discovery can miss announcements, include duplicate syndication, or surface low-quality coverage.
-- **Corroboration is heuristic:** Similarity clusters and distinct-host counts are triage signals. They do not prove that publishers are independent or that every claim is true.
-- **Importance score:** A transparent heuristic based on source type, topic keywords, corroboration and recency. It is for prioritization, not an objective measure of truth.
-- **No continuous monitoring:** The workflow runs weekly, not continuously.
-- **Failure handling:** Transient HTTP errors are retried with bounded backoff. Non-retryable API errors include a shortened response detail in the Actions log.
+## Monitored feeds
 
-## Setup
-
-Create two GitHub Actions repository secrets:
-
-| Secret | Purpose |
+| Publisher / feed | Type |
 |---|---|
-| `GEMINI_API_KEY` | Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey) |
-| `NOTION_TOKEN` | Internal Notion integration token with access to the AI Intelligence Hub parent page |
+| OpenAI | Publisher |
+| Google AI | Publisher |
+| Google DeepMind | Publisher |
+| Google Research | Publisher |
+| Hugging Face | Publisher |
+| NVIDIA | Publisher |
+| AWS Machine Learning | Publisher |
+| Microsoft Research | Publisher |
+| arXiv cs.AI | Research |
+| arXiv cs.LG | Research |
 
-Never commit secrets or paste them into issues, logs, or chat.
+The API checks the most recent 14 days, normalizes dates to UTC, and keeps direct source links. Feed outages are isolated and reported in the API response rather than silently fabricating replacement stories.
 
-Then open **Actions → Weekly AI Intelligence Digest → Run workflow** to run a manual test on `main`.
+## Signals and limitations
 
-## Schedule
+- **Priority score:** a deterministic heuristic based on publisher type, selected topic terms, and recency. It is a triage aid, not a measure of truth, quality, or market importance.
+- **Topic tags:** transparent keyword rules applied to titles and feed descriptions. They can miss context or misclassify ambiguous wording.
+- **Cross-publisher themes:** indicate that multiple monitored feeds contain items tagged with a topic during the same collection window. This does not establish collaboration, causation, competition, or a trend in the wider industry.
+- **Publisher evidence:** a direct publisher feed establishes where the item was published, not that every claim in it is independently verified.
+- **Coverage:** curated feeds are not exhaustive. Feed format changes, outages, and publication delays can affect results.
+- **Freshness:** the API checks feeds on request and caches a successful response in the running function instance for up to 10 minutes. It is not a continuous crawler.
 
-The cron expression is `30 3 * * 0`, which is Sunday at 03:30 UTC / 9:00 AM IST.
+## Run locally
 
-## Repository structure
+The site is static HTML and the API uses only the Python standard library.
 
-```text
-.github/workflows/weekly-ai-digest.yml
-scripts/weekly_ai_digest.py
-scripts/source_registry.py
-WEEKLY_AI_DIGEST_SETUP.md
-README.md
-```
+\`\`\`bash
+python -m unittest discover -s tests -v
+python -m py_compile api/news.py scripts/*.py
+\`\`\`
 
-## Roadmap
+For a local website preview, serve the \`public\` directory with any static file server. The \`/api/news\` endpoint requires a Python-compatible serverless runtime; a plain static server will not execute it.
 
-- Add robust publisher-specific sitemap/page adapters for companies without stable RSS feeds.
-- Resolve syndicated links to original publisher URLs and detect shared wire-service sources.
-- Add source-page extraction and claim-level semantic evidence review with human adjudication.
-- Add automated unit tests, integration fixtures, and a preview/dry-run mode before publishing.
-- Persist structured developments to a Notion database for longitudinal trend analysis.
-- Publish structured entries into the AI Updates Tracker database as well as the weekly briefing page.
+## Deploy to Vercel
 
-## Portfolio note
+1. Import this GitHub repository into Vercel.
+2. Keep the project root set to the repository root.
+3. Deploy with the included \`vercel.json\`.
+4. Open the deployed site and confirm that \`/api/news\` returns JSON and that stories link to their original sources.
 
-This project demonstrates scheduled data ingestion, deduplication, LLM-based information extraction, validation, API integration, and automated publishing. Describe it as an **AI-assisted news intelligence pipeline**, not as a fully fact-checked news service.
+The website does not require a Gemini, Groq, or Notion API key to display publisher-feed items. The separate weekly Notion digest workflow still requires its existing GitHub Actions secrets.
+
+## Continuous integration
+
+The \`FrontierShift CI\` workflow runs on pushes and pull requests to \`main\`. It compiles the Python modules and runs the standard-library unit tests.
+
+## Repository layout
+
+\`\`\`text
+.github/workflows/
+  frontiershift-ci.yml
+  weekly-ai-digest.yml
+api/
+  news.py
+public/
+  index.html
+scripts/
+  evidence_checks.py
+  intelligence_graph.py
+  source_registry.py
+  weekly_ai_digest.py
+tests/
+  test_api_news.py
+  test_evidence_checks.py
+  test_intelligence_graph.py
+  test_source_registry.py
+\`\`\`
+
+## Project status
+
+The website and source-backed feed API have been added to the repository. CI is configured to validate Python syntax and unit tests. A successful CI run and a live Vercel deployment must be confirmed from their respective dashboards before describing the hosted product as production-ready.
+
+## Portfolio description
+
+FrontierShift is a source-linked AI ecosystem intelligence project built with Python and a responsive web interface. It ingests publisher and research feeds, normalizes and deduplicates records, applies explainable topic and priority heuristics, and surfaces cross-publisher topic overlap with direct source links. The project explicitly documents the limits of keyword-based classification and heuristic scoring.
