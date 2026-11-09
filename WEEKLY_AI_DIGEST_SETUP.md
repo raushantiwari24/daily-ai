@@ -1,29 +1,47 @@
 # Weekly AI Intelligence Digest
 
-This workflow collects recent AI-company updates every Sunday at **9:00 AM India Standard Time**, summarizes them with Gemini 2.5 Flash-Lite, and creates a dated child page under the AI Intelligence Hub in Notion.
+This workflow collects AI-industry news every Sunday at **9:00 AM India Standard Time**, summarizes the collected feed records with Gemini 3.5 Flash-Lite, validates generated citations against those records, and creates a dated child page under the AI Intelligence Hub in Notion.
 
-## Monitored publishers
+## Monitored organizations
 
-OpenAI, Anthropic, Google / Gemini, Google DeepMind, xAI / Grok, Meta / Llama, DeepSeek, Mistral AI, Microsoft, NVIDIA, and Hugging Face. Collection uses domain-restricted Google News RSS queries. The digest keeps source links and labels its contents as AI-assisted leads rather than claiming independent verification.
+OpenAI, Anthropic, Google / Gemini, Google DeepMind, xAI / Grok, Meta / Llama, DeepSeek, Mistral AI, Microsoft, NVIDIA, and Hugging Face.
 
-## One-time setup required
+Discovery currently uses domain-restricted Google News RSS queries. This improves coverage across publishers but is not equivalent to reading and independently verifying every original article.
 
-Add these two repository Actions secrets. Never commit either value to the repository.
+## Required GitHub Actions secrets
 
-1. `GEMINI_API_KEY`: create a key in [Google AI Studio](https://aistudio.google.com/app/apikey). The workflow uses the Gemini 2.5 Flash-Lite model. Free-tier availability and quotas depend on Google's current account and model limits.
-2. `NOTION_TOKEN`: create an internal Notion integration, give it access to the **AI Intelligence Hub** page, and copy its secret token. Notion's guide: [Create an integration](https://www.notion.com/help/create-integrations-with-the-notion-api).
+Add these under **Repository → Settings → Secrets and variables → Actions**:
 
-In GitHub, open **Settings → Secrets and variables → Actions → New repository secret** and add each secret with the exact name above.
+1. `GEMINI_API_KEY`: create a key in [Google AI Studio](https://aistudio.google.com/app/apikey).
+2. `NOTION_TOKEN`: create an internal Notion integration, grant it access to the **AI Intelligence Hub** page, and copy its token. See [Notion's integration guide](https://www.notion.com/help/create-integrations-with-the-notion-api).
+
+Never commit either secret to the repository.
 
 ## Run a test
 
-Open the repository's **Actions** tab, select **Weekly AI Intelligence Digest**, choose **Run workflow**, and start it on the `main` branch. A successful run prints the new Notion page URL in the job log.
+Open **Actions → Weekly AI Intelligence Digest → Run workflow**, select `main`, and start the run. A successful run prints the new Notion page URL in the job log.
 
-## Schedule and cost
+## Schedule
 
-- Schedule: Sundays, 9:00 AM IST.
-- GitHub Actions: standard GitHub-hosted runners are free for public repositories.
-- Gemini: uses the free tier when available. Free-tier quotas and model availability can change; do not enable paid billing if you want to keep this project at zero API cost.
-- Notion: uses the existing workspace and API integration.
+- Cron: `30 3 * * 0`
+- Local time: Sunday, 9:00 AM IST
+- The workflow can also be started manually with `workflow_dispatch`.
 
-A scheduled run is not active until both secrets are configured, the Notion integration is granted access to the parent page, and a manual test succeeds. Public-repository scheduled workflows can be disabled by GitHub after 60 days without repository activity, so check the Actions tab periodically.
+## Reliability notes
+
+- The collector deduplicates titles and keeps a rolling seven-day window.
+- Gemini output is checked for required fields.
+- Each published development must cite an exact URL from the collected feed, and its date must match the source record.
+- Transient HTTP failures receive bounded retries.
+- These checks validate structure and provenance, not the truth of every generated sentence. Always open primary sources before relying on claims.
+- Google News RSS can miss relevant stories or surface syndicated coverage.
+- Gemini free-tier quotas and model availability depend on Google's current account limits. Do not enable paid billing if you intend to keep API usage free.
+
+## Troubleshooting
+
+- **Gemini HTTP 400/404:** Check the model/API availability and the shortened response detail in the failed Actions step.
+- **Gemini HTTP 429:** The API quota or rate limit may have been reached. Retry later or reduce collection volume.
+- **Notion HTTP 401/403:** Check that `NOTION_TOKEN` is current and the integration has access to the AI Intelligence Hub page.
+- **No feed items:** Check the Actions log; Notion will not be updated when collection returns zero items.
+
+GitHub may disable scheduled workflows after prolonged repository inactivity. Check the Actions tab periodically.
