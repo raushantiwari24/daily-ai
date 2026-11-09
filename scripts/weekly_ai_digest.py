@@ -12,6 +12,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+
+from source_registry import collect_intelligence
 from datetime import datetime, timedelta, timezone
 from html import unescape
 from typing import Any
@@ -149,7 +151,7 @@ Return ONLY valid JSON with this schema:
    {"title":"...", "company":"exact supplied company label", "date":"YYYY-MM-DD",
     "summary":"2-3 clear sentences based only on supplied data",
     "why_it_matters":"one concrete implication, or state that implications are uncertain",
-    "url":"EXACT URL from one supplied item"}
+    "url":"EXACT URL from one supplied item", "evidence_level":"exact input value", "corroboration_count":0, "importance_score":0, "importance_band":"exact input value"}
  ],
  "company_notes": ["short concise notes for companies with relevant updates"],
  "watch_next_week": ["clearly labelled watch items; do not imply confirmed events"],
@@ -221,6 +223,10 @@ def validate_digest(digest: Any, updates: list[dict[str, str]]) -> dict[str, Any
             "summary": summary[:900],
             "why_it_matters": str(entry.get("why_it_matters", "Implications are uncertain."))[:500],
             "url": url,
+            "evidence_level": str(entry.get("evidence_level", allowed_items[url].get("evidence_level", "unknown"))),
+            "corroboration_count": int(entry.get("corroboration_count", allowed_items[url].get("corroboration_count", 1))),
+            "importance_score": int(entry.get("importance_score", allowed_items[url].get("importance_score", 0))),
+            "importance_band": str(entry.get("importance_band", allowed_items[url].get("importance_band", "emerging"))),
         })
     digest["top_developments"] = clean_entries
     for field in ("company_notes", "watch_next_week"):
@@ -268,7 +274,7 @@ def publish_to_notion(digest: dict[str, Any], updates_count: int) -> str:
         url = str(entry.get("url", "")).strip()
         if url not in valid_urls:
             continue
-        label = f"{entry.get('title', 'Update')} | {entry.get('company', 'Company')} | {entry.get('date', 'Date')}"
+        label = f"{entry.get('title', 'Update')} | {entry.get('company', 'Company')} | {entry.get('date', 'Date')} | {entry.get('importance_band', 'emerging').upper()} ({entry.get('importance_score', 0)}/100) | {entry.get('evidence_level', 'unknown')} evidence | {entry.get('corroboration_count', 1)} source domain(s)"
         blocks.append(bullet(label, url))
         summary = str(entry.get("summary", "")).strip()
         if summary:
@@ -297,7 +303,7 @@ def publish_to_notion(digest: dict[str, Any], updates_count: int) -> str:
         heading("The week's takeaway"),
         paragraph(digest.get("bottom_line", "Review the linked primary-source coverage before making decisions.")),
         heading("Editorial and verification note"),
-        paragraph("This digest is AI-assisted and based on the linked feed entries. Headlines and summaries are leads, not independent verification. Open the original source before relying on a claim. Rumours and unconfirmed reports should not be treated as announcements."),
+        paragraph("Evidence labels: first-party means the linked publisher is the originating organization; research-source means an academic/research feed; secondary means discovery coverage. Corroboration counts distinct URL hostnames among headline-similar records, not independent confirmation of every claim. Importance scores are deterministic prioritization heuristics, not objective truth or quality measurements. Gemini summaries are AI-generated and may contain errors. Open primary sources and compare the underlying evidence before relying on claims."),
     ])
 
     # Notion accepts at most 100 child blocks per create-page request.
@@ -324,7 +330,7 @@ def main() -> None:
     if missing:
         raise RuntimeError("Missing GitHub Actions secrets: " + ", ".join(missing))
 
-    CURRENT_UPDATES = collect_updates()
+    CURRENT_UPDATES = collect_intelligence()
     print(f"Collected {len(CURRENT_UPDATES)} unique feed items.")
     if not CURRENT_UPDATES:
         raise RuntimeError("No feed items were collected. Notion was not updated.")
