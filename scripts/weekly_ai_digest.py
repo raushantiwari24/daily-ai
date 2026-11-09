@@ -16,12 +16,14 @@ import xml.etree.ElementTree as ET
 
 from source_registry import collect_intelligence
 from evidence_checks import assess_summary_support
+from intelligence_graph import build_ecosystem_signals, event_key
 from datetime import datetime, timedelta, timezone
 from html import unescape
 from typing import Any
 
 NOTION_PARENT_PAGE_ID = "41362a3c60c981bfa39ae0849bd70975"
 NOTION_VERSION = "2022-06-28"
+NOTION_DATA_SOURCE_ID = "a82ad32c-1789-4260-874a-872cca0909be"
 GEMINI_MODEL = "gemini-3.5-flash-lite"
 WINDOW_DAYS = 7
 MAX_PER_COMPANY = 6
@@ -268,6 +270,91 @@ def bullet(text: str, url: str | None = None) -> dict[str, Any]:
     return {"object": "block", "type": "bulleted_list_item",
             "bulleted_list_item": {"rich_text": [notion_rich_text(text, url)]}}
 
+
+def sync_tracker(entries: list[dict[str, Any]]) -> tuple[int, int]:
+    """Upsert selected developments into the Notion event ledger by stable event key."""
+    token = os.environ["NOTION_TOKEN"]
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Notion-Version": "2025-09-03",
+        "Content-Type": "application/json",
+    }
+    created = updated = 0
+    company_options = {
+        "openai": "OpenAI", "anthropic": "Anthropic", "google": "Google",
+        "google / gemini": "Google", "google deepmind": "Google",
+        "xai / grok": "xAI", "xai": "xAI", "meta / llama": "Meta",
+        "meta": "Meta", "deepseek": "DeepSeek", "mistral ai": "Mistral",
+        "mistral": "Mistral", "microsoft": "Microsoft",
+    }
+    for entry in entries:
+        key = event_key(entry)
+        company_raw = str(entry.get("company", "Other"))
+        company = company_options.get(company_raw.lower(), "Other")
+        text = f"{entry.get('title', '')} {entry.get('summary', '')}".lower()
+        if any(term in text for term in ("benchmark", "evaluation", "leaderboard")):
+            category = "Benchmark"
+        elif any(term in text for term in ("safety", "alignment", "security")):
+            category = "Safety"
+        elif any(term in text for term in ("pricing", "price", "cost")):
+            category = "Pricing"
+        elif "api" in text:
+            category = "API change"
+        elif any(term in text for term in ("model", "llm", "weights")):
+            category = "Model release"
+        elif "research" in text or entry.get("evidence_level") == "research-source":
+            category = "Research"
+        elif any(term in text for term in ("feature", "app", "product")):
+            category = "Product feature"
+        else:
+            category = "Other"
+        evidence = str(entry.get("evidence_level", "secondary"))
+        evidence_status = "Primary source" if evidence == "first-party" else "Research source" if evidence == "research-source" else "Secondary only"
+        today = datetime.now(timezone.utc).date().isoformat()
+        properties = {
+            "Update": {"title": [{"text": {"content": str(entry.get("title", "Untitled"))[:180]}}]},
+            "Company": {"select": {"name": company}},
+            "Category": {"select": {"name": category}},
+            "Announcement date": {"date": {"start": str(entry.get("date", today))}},
+            "Last observed": {"date": {"start": today}},
+            "Evidence status": {"select": {"name": evidence_status}},
+            "Verified": {"checkbox": False},
+            "Event key": {"rich_text": [{"text": {"content": key}}]},
+            "Source URL": {"url": str(entry.get("url", "")) or None},
+            "Summary": {"rich_text": [{"text": {"content": str(entry.get("summary", ""))[:1800]}}]},
+            "Priority score": {"number": int(entry.get("importance_score", 0))},
+            "Source domains": {"number": int(entry.get("corroboration_count", 1))},
+        }
+        query_body = {"filter": {"property": "Event key", "rich_text": {"equals": key}}, "page_size": 1}
+        query_raw = request(
+            f"https://api.notion.com/v1/data_sources/{NOTION_DATA_SOURCE_ID}/query",
+            data=json.dumps(query_body).encode("utf-8"), method="POST",
+            headers=headers, timeout=30,
+        )
+        matches = json.loads(query_raw).get("results", [])
+        if matches:
+            page_id = matches[0]["id"]
+            update_body = {"properties": {
+                "Last observed": properties["Last observed"],
+                "Source domains": properties["Source domains"],
+                "Priority score": properties["Priority score"],
+                "Summary": properties["Summary"],
+            }}
+            request(f"https://api.notion.com/v1/pages/{page_id}",
+                    data=json.dumps(update_body).encode("utf-8"), method="PATCH",
+                    headers=headers, timeout=30)
+            updated += 1
+        else:
+            create_body = {
+                "parent": {"type": "data_source_id", "data_source_id": NOTION_DATA_SOURCE_ID},
+                "properties": properties,
+            }
+            request("https://api.notion.com/v1/pages",
+                    data=json.dumps(create_body).encode("utf-8"), method="POST",
+                    headers=headers, timeout=30)
+            created += 1
+    return created, updated
+
 def publish_to_notion(digest: dict[str, Any], updates_count: int) -> str:
     token = os.environ["NOTION_TOKEN"]
     today = datetime.now(timezone.utc).astimezone().strftime("%d %b %Y")
@@ -283,6 +370,15 @@ def publish_to_notion(digest: dict[str, Any], updates_count: int) -> str:
     ]
 
     developments = digest.get("top_developments", [])
+    signals = build_ecosystem_signals(CURRENT_UPDATES)
+    blocks.append(heading("AI ecosystem change graph"))
+    blocks.append(paragraph(f"Analyzed {signals['items_analyzed']} feed records. These are topic-co-occurrence signals, not predictions or causal findings."))
+    for signal in signals["topic_company_convergence"][:6]:
+        companies = ", ".join(signal["companies"])
+        blocks.append(bullet(f"Cross-company convergence: {signal['topic']} | {signal['company_count']} monitored publishers | {companies}"))
+    for profile in signals["company_topic_profiles"][:8]:
+        leaders = ", ".join(f"{x['topic']} ({x['items']})" for x in profile["leading_topics"])
+        blocks.append(bullet(f"{profile['company']} topic footprint: {leaders}"))
     valid_urls = {item["url"] for item in CURRENT_UPDATES}
     added = 0
     for entry in developments:
@@ -353,6 +449,8 @@ def main() -> None:
 
     digest = call_gemini(CURRENT_UPDATES)
     page_url = publish_to_notion(digest, len(CURRENT_UPDATES))
+    created, updated = sync_tracker(digest.get("top_developments", []))
+    print(f"[TRACKER] Notion event ledger: {created} new events, {updated} recurring events updated.")
     if not page_url:
         raise RuntimeError("Notion API did not return a page URL.")
     print("Published weekly digest:", page_url)
