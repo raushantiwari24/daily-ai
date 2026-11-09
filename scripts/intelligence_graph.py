@@ -32,6 +32,15 @@ COMPANY_ALIASES = {
     "meta": "Meta", "xai": "xAI", "deepseek": "DeepSeek", "mistral": "Mistral",
 }
 
+def canonical_company(value: str) -> str:
+    normalized = (value or "").lower()
+    if "arxiv" in normalized:
+        return "Research community"
+    for alias, canonical in COMPANY_ALIASES.items():
+        if alias in normalized:
+            return canonical
+    return value or "Unknown"
+
 def topic_tags(text: str) -> list[str]:
     normalized = (text or "").lower()
     return sorted(topic for topic, terms in TOPIC_RULES.items()
@@ -51,7 +60,7 @@ def build_ecosystem_signals(items: list[dict]) -> dict:
     for item in items:
         text = f"{item.get('title', '')} {item.get('description', '')}"
         tags = topic_tags(text)
-        company = str(item.get("publisher") or item.get("company") or "Unknown")
+        company = canonical_company(str(item.get("publisher") or item.get("company") or "Unknown"))
         for tag in tags:
             company_topics[company][tag] += 1
             topic_companies[tag].add(company)
