@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/news", "destination": "/api/news.py" },
-    { "source": "/(.*)", "destination": "/public/$1" }
+    { "source": "/api/news", "destination": "/api/news.py" }
   ]
 }
