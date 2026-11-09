@@ -68,7 +68,7 @@ def node_text(node, names):
 def fetch_feed(feed):
     publisher, url, tier = feed
     request = urllib.request.Request(url, headers={"User-Agent": "FrontierShift/1.0 (+https://github.com/raushantiwari24/daily-ai)"})
-    with urllib.request.urlopen(request, timeout=12) as response:
+    with urllib.request.urlopen(request, timeout=7) as response:
         root = ET.fromstring(response.read())
     nodes = root.findall(".//item")
     atom = False
