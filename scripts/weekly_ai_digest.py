@@ -204,7 +204,7 @@ def validate_digest(digest: Any, updates: list[dict[str, str]]) -> dict[str, Any
             print(f"[WARN] Dropping development {index}: URL was not in the collected feed.", file=sys.stderr)
             continue
         date = str(entry.get("date", "")).strip()
-        if not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}", date):
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
             print(f"[WARN] Dropping development {index}: invalid date.", file=sys.stderr)
             continue
         if date != allowed_items[url]["date"]:
