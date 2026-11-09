@@ -1,6 +1,6 @@
 # AI Intelligence Digest
 
-An automated weekly AI-industry intelligence pipeline that ingests first-party publisher feeds and research feeds, uses secondary news discovery for coverage gaps, computes transparent evidence and priority signals, uses Gemini to synthesize a briefing, validates source provenance, and publishes the result to Notion.
+An automated weekly AI-industry intelligence pipeline that ingests first-party publisher feeds and research feeds, uses secondary news discovery for coverage gaps, computes transparent evidence and priority signals, uses Gemini to synthesize a briefing, validates source provenance, and publishes the result to Notion. It also builds an explainable AI Ecosystem Change Graph and upserts selected events into a longitudinal Notion ledger.
 
 **Schedule:** Sundays at 9:00 AM India Standard Time (03:30 UTC)  
 **Output:** A dated page in the connected Notion workspace  
@@ -14,13 +14,15 @@ An automated weekly AI-industry intelligence pipeline that ingests first-party p
 4. Sends the source records and evidence metadata to Gemini 3.5 Flash-Lite for synthesis.
 5. Validates response structure, exact source URLs, and dates before publication.
 6. Applies a conservative lexical-overlap triage check between generated summaries and feed title/description snippets. This flags weakly supported wording; it is not factual verification.
-7. Publishes the digest to Notion with evidence labels, priority bands, snippet-overlap signals, source links, and explicit limitations.
+7. Builds topic co-occurrence signals across publishers, exposing where multiple organizations are active in the same capability areas.
+8. Upserts selected developments into the Notion AI Updates Tracker using stable event keys, updating repeat observations instead of blindly duplicating them.
+9. Publishes the digest, ecosystem graph signals, evidence labels, priority bands, and source links to Notion.
 
 ## Monitored organizations
 
 OpenAI, Anthropic, Google / Gemini, Google DeepMind, xAI / Grok, Meta / Llama, DeepSeek, Mistral AI, Microsoft, NVIDIA, and Hugging Face.
 
-## Architecture
+## Differentiating capability: AI Ecosystem Change Graph\n\nThe graph converts feed records into stable event keys, a transparent topic taxonomy, company-topic profiles, and cross-publisher convergence signals. It answers questions such as which capability areas multiple monitored organizations are publishing about in the same collection window. It does not infer coordination, causation, market leadership, or future outcomes.\n\nSelected digest developments are upserted into the Notion AI Updates Tracker. A stable event key allows recurring observations to update the same event record, while preserving the original announcement date and recording the latest observation date.\n\n## Architecture
 
 ```text
 GitHub Actions (weekly schedule / manual run)
