@@ -1,477 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Daily AI — The AI News That Matters</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --black: #1d1d1f;
-      --gray1: #f5f5f7;
-      --gray2: #e8e8ed;
-      --gray3: #6e6e73;
-      --gray4: #86868b;
-      --blue: #0071e3;
-      --white: #ffffff;
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--white);
-      color: var(--black);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ── NAV ── */
-    nav {
-      position: sticky; top: 0; z-index: 200;
-      background: rgba(255,255,255,0.88);
-      backdrop-filter: saturate(180%) blur(20px);
-      -webkit-backdrop-filter: saturate(180%) blur(20px);
-      border-bottom: 0.5px solid rgba(0,0,0,0.1);
-      height: 52px;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 0 32px;
-    }
-
-    .nav-logo {
-      font-size: 17px; font-weight: 700;
-      color: var(--black); letter-spacing: -0.5px;
-      text-decoration: none;
-    }
-
-    .nav-links {
-      display: flex; align-items: center; gap: 28px; list-style: none;
-    }
-
-    .nav-links span {
-      font-size: 13px; color: var(--black); opacity: 0.75;
-      cursor: pointer; transition: opacity 0.15s;
-    }
-
-    .nav-links span:hover { opacity: 1; }
-
-    .nav-live {
-      display: flex; align-items: center; gap: 6px;
-      font-size: 12px; font-weight: 500; color: #1d7a3a;
-    }
-
-    .live-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #30d158;
-      animation: pulse 1.8s ease-in-out infinite;
-    }
-
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-    /* ── HERO ── */
-    .hero {
-      background: var(--black);
-      padding: 100px 32px 90px;
-      text-align: center;
-    }
-
-    .hero-eyebrow {
-      font-size: 13px; font-weight: 500;
-      color: #0a84ff; letter-spacing: 0.3px;
-      margin-bottom: 16px;
-    }
-
-    .hero-title {
-      font-size: clamp(44px, 7vw, 76px);
-      font-weight: 800; color: #f5f5f7;
-      letter-spacing: -2.5px; line-height: 1.04;
-      margin-bottom: 20px;
-    }
-
-    .hero-title span { color: #0a84ff; }
-
-    .hero-sub {
-      font-size: clamp(16px, 2.2vw, 20px);
-      font-weight: 300; color: #86868b;
-      line-height: 1.6; max-width: 520px;
-      margin: 0 auto 36px;
-    }
-
-    .hero-chip {
-      display: inline-flex; align-items: center; gap: 7px;
-      font-size: 13px; color: #6e6e73;
-      border: 0.5px solid #3a3a3c;
-      padding: 8px 18px; border-radius: 20px;
-    }
-
-    /* ── MAIN CONTENT ── */
-    .main { padding: 56px 32px; max-width: 1080px; margin: 0 auto; }
-
-    /* ── STATS ── */
-    .stats {
-      display: grid; grid-template-columns: repeat(3,1fr);
-      gap: 1px; background: var(--gray2);
-      border: 1px solid var(--gray2);
-      border-radius: 20px; overflow: hidden;
-      margin-bottom: 48px;
-    }
-
-    .stat { background: var(--white); padding: 28px 20px; text-align: center; }
-    .stat-n { font-size: 42px; font-weight: 700; letter-spacing: -1.5px; color: var(--black); line-height: 1; }
-    .stat-l { font-size: 13px; color: var(--gray4); margin-top: 6px; }
-
-    /* ── FILTERS ── */
-    .filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 36px; }
-
-    .ftag {
-      font-size: 13px; font-weight: 500;
-      padding: 7px 16px; border-radius: 20px;
-      cursor: pointer; font-family: inherit;
-      border: 1px solid var(--gray2);
-      background: var(--white); color: var(--gray3);
-      transition: all .16s;
-    }
-
-    .ftag:hover { border-color: var(--black); color: var(--black); }
-    .ftag.active { background: var(--black); color: var(--white); border-color: var(--black); }
-
-    /* ── SECTION HEADER ── */
-    .section-header {
-      display: flex; align-items: baseline; justify-content: space-between;
-      border-bottom: 0.5px solid var(--gray2);
-      padding-bottom: 14px; margin-bottom: 28px;
-    }
-
-    .section-title { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; }
-    .section-count { font-size: 13px; color: var(--gray4); }
-
-    /* ── FEATURED ── */
-    .card-featured {
-      background: var(--gray1);
-      border-radius: 20px; padding: 36px;
-      margin-bottom: 14px;
-      display: flex; gap: 28px; align-items: flex-start;
-      text-decoration: none; color: inherit;
-      transition: background 0.18s;
-    }
-
-    .card-featured:hover { background: #ebebf0; }
-
-    .feat-body { flex: 1; }
-
-    .feat-label {
-      font-size: 11px; font-weight: 600;
-      color: var(--blue); letter-spacing: 0.4px;
-      text-transform: uppercase; margin-bottom: 12px;
-    }
-
-    .feat-title {
-      font-size: 26px; font-weight: 700;
-      letter-spacing: -0.6px; line-height: 1.25;
-      color: var(--black); margin-bottom: 12px;
-    }
-
-    .feat-summary {
-      font-size: 15px; color: var(--gray3);
-      line-height: 1.65; margin-bottom: 18px;
-      max-width: 560px;
-    }
-
-    .feat-meta { font-size: 13px; color: var(--gray4); font-weight: 500; display: flex; align-items: center; gap: 8px; }
-
-    .feat-arrow {
-      width: 46px; height: 46px; border-radius: 50%;
-      background: var(--black); color: var(--white);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 19px; flex-shrink: 0;
-      transition: transform 0.18s;
-    }
-
-    .card-featured:hover .feat-arrow { transform: translate(3px, -3px); }
-
-    /* ── GRID ── */
-    .grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
-
-    /* ── CARD ── */
-    .card {
-      background: var(--gray1);
-      border-radius: 18px; padding: 26px 22px;
-      text-decoration: none; color: inherit;
-      display: flex; flex-direction: column;
-      justify-content: space-between;
-      min-height: 210px;
-      transition: background 0.18s;
-    }
-
-    .card:hover { background: #ebebf0; }
-
-    .c-tag {
-      font-size: 11px; font-weight: 600;
-      padding: 3px 10px; border-radius: 20px;
-      display: inline-block; margin-bottom: 10px;
-    }
-
-    .c-title {
-      font-size: 15px; font-weight: 600;
-      letter-spacing: -0.25px; line-height: 1.4;
-      color: var(--black); margin-bottom: 7px;
-    }
-
-    .c-sum { font-size: 12.5px; color: var(--gray3); line-height: 1.6; }
-
-    .c-foot {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      margin-top: 18px; padding-top: 14px;
-      border-top: 0.5px solid var(--gray2);
-    }
-
-    .c-source { font-size: 11.5px; color: var(--gray4); font-weight: 500; }
-    .c-read { font-size: 12px; font-weight: 500; color: var(--blue); display: flex; align-items: center; gap: 2px; }
-
-    /* ── STATES ── */
-    .state-wrap { grid-column: span 3; text-align: center; padding: 80px 20px; }
-
-    .spinner {
-      width: 38px; height: 38px;
-      border: 2px solid var(--gray2);
-      border-top-color: var(--black);
-      border-radius: 50%; margin: 0 auto 20px;
-      animation: spin .7s linear infinite;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .state-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: var(--black); }
-    .state-sub { font-size: 13px; color: var(--gray4); line-height: 1.7; }
-
-    .error-wrap {
-      grid-column: span 3;
-      background: #fff2f2; border: 1px solid #fecaca;
-      border-radius: 16px; padding: 28px;
-      text-align: center; color: #b91c1c; font-size: 14px;
-    }
-
-    /* ── FOOTER ── */
-    footer {
-      background: var(--gray1);
-      border-top: 0.5px solid var(--gray2);
-      padding: 40px 32px; text-align: center;
-    }
-
-    .footer-name { font-size: 20px; font-weight: 700; letter-spacing: -0.4px; margin-bottom: 8px; }
-    .footer-sub { font-size: 13px; color: var(--gray4); line-height: 1.7; }
-
-    /* ── RESPONSIVE ── */
-    @media (max-width: 780px) {
-      .grid { grid-template-columns: 1fr 1fr; }
-      .state-wrap, .error-wrap { grid-column: span 2; }
-      .card-featured { flex-direction: column; }
-      .feat-arrow { display: none; }
-      .feat-title { font-size: 20px; }
-      .nav-links { display: none; }
-      .main { padding: 36px 20px; }
-    }
-
-    @media (max-width: 520px) {
-      .grid { grid-template-columns: 1fr; }
-      .state-wrap, .error-wrap { grid-column: span 1; }
-      .hero { padding: 64px 20px 56px; }
-      nav { padding: 0 20px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fbfbfd">
+<meta name="description" content="FrontierShift tracks the research, companies and technologies shaping artificial intelligence.">
+<title>FrontierShift — Intelligence for what's next</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#17181c;--muted:#737781;--soft:#9a9da5;--line:#e8e9ed;--paper:#fbfbfd;--white:#fff;--blue:#1677ee;--blue-soft:#eaf3ff;--green:#16845b;--radius:24px;--shadow:0 20px 60px rgba(25,35,55,.07)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font-family:"DM Sans",-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}button,input{font:inherit}.shell{max-width:1240px;margin:0 auto;padding:0 42px}
+.ambient{position:absolute;inset:0 0 auto;height:680px;overflow:hidden;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at 50% 10%,rgba(211,230,255,.56),transparent 42%),linear-gradient(180deg,#fff 0%,#fbfbfd 82%)}.ambient:after{content:"";position:absolute;width:660px;height:380px;left:50%;top:80px;transform:translateX(-50%);background:radial-gradient(ellipse,rgba(181,213,255,.28),transparent 68%);filter:blur(25px)}
+.topbar{height:66px;position:sticky;top:0;z-index:30;background:rgba(251,251,253,.78);backdrop-filter:blur(24px) saturate(180%);border-bottom:1px solid rgba(225,227,232,.72)}.nav{height:100%;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand{display:flex;align-items:center;gap:10px;font:800 18px Manrope,sans-serif;letter-spacing:-.8px}.brand-mark{width:28px;height:28px;border-radius:9px;background:linear-gradient(145deg,#151b28,#3e526f);display:grid;place-items:center;color:white;font-size:13px;box-shadow:0 4px 12px rgba(30,50,80,.18)}.navlinks{display:flex;align-items:center;gap:32px;color:#555b66;font-size:13px}.navlinks a{transition:color .2s}.navlinks a:hover{color:var(--blue)}.navright{display:flex;align-items:center;gap:14px}.edition{font-size:11px;color:var(--muted);border:1px solid var(--line);padding:7px 11px;border-radius:99px;background:rgba(255,255,255,.7)}.menu-btn{display:none;border:0;background:transparent;font-size:22px}
+.hero{text-align:center;padding:94px 0 54px;position:relative}.eyebrow{display:inline-flex;align-items:center;gap:8px;color:#52749d;font-size:11px;letter-spacing:1.55px;text-transform:uppercase;font-weight:700}.eyedot{width:6px;height:6px;background:#3e91fa;border-radius:50%;box-shadow:0 0 0 4px rgba(62,145,250,.12)}h1{font:800 clamp(48px,7vw,82px)/1.02 Manrope,sans-serif;letter-spacing:-5px;margin:23px auto 20px;max-width:920px}.headline-gradient{background:linear-gradient(105deg,#1b2535 15%,#416f9f 55%,#6a9bd1 100%);-webkit-background-clip:text;background-clip:text;color:transparent}.hero-copy{max-width:590px;margin:0 auto;color:#737985;font-size:17px;line-height:1.75}.hero-actions{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:29px}.primary-btn,.secondary-btn{height:44px;padding:0 19px;border-radius:99px;display:inline-flex;align-items:center;gap:9px;font-size:13px;font-weight:600;transition:transform .2s,box-shadow .2s}.primary-btn{background:#171b23;color:white;box-shadow:0 8px 20px rgba(23,27,35,.14)}.primary-btn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(23,27,35,.2)}.secondary-btn{background:rgba(255,255,255,.76);border:1px solid #e6e8ed;color:#414854}.secondary-btn:hover{transform:translateY(-2px);background:white}.arrow{font-size:16px}
+.hero-note{margin-top:22px;color:#9a9da5;font-size:11px;letter-spacing:.15px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);max-width:900px;margin:14px auto 0;background:rgba(255,255,255,.74);border:1px solid rgba(228,231,237,.9);border-radius:20px;box-shadow:0 12px 35px rgba(36,51,75,.035);overflow:hidden}.metric{padding:21px 14px;text-align:center;position:relative}.metric:not(:last-child):after{content:"";position:absolute;right:0;top:22px;bottom:22px;width:1px;background:#eceef2}.metric-value{font:700 27px Manrope,sans-serif;letter-spacing:-1px}.metric-label{font-size:11px;color:#8a8f99;margin-top:4px}
+.section{padding:52px 0 12px}.section-top{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:20px}.kicker{font-size:10px;color:#8a929e;text-transform:uppercase;letter-spacing:1.35px;font-weight:700;margin-bottom:9px}.section-title{font:700 27px Manrope,sans-serif;letter-spacing:-1.1px;margin:0}.section-desc{font-size:12px;color:#8a8f99;margin-top:6px}.updated{font-size:11px;color:#9297a0;white-space:nowrap}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:22px 0 18px}.filters{display:flex;gap:7px;flex-wrap:wrap}.filter{border:1px solid #e7e9ee;background:rgba(255,255,255,.8);color:#777e89;padding:8px 13px;border-radius:99px;font-size:11px;cursor:pointer;transition:all .18s}.filter:hover{border-color:#b9c9dd;color:#263b54}.filter.active{background:#202833;color:#fff;border-color:#202833}.searchbox{height:36px;min-width:210px;border:1px solid #e7e9ee;border-radius:99px;background:rgba(255,255,255,.85);display:flex;align-items:center;padding:0 12px;gap:8px;color:#9aa0aa}.searchbox input{border:0;outline:0;background:transparent;width:100%;font-size:11px;color:var(--ink)}.searchbox input::placeholder{color:#a3a7af}
+.featured{display:grid;grid-template-columns:1.18fr .82fr;min-height:280px;border:1px solid #e7ebf1;border-radius:26px;overflow:hidden;background:linear-gradient(115deg,#fff 0%,#f5f9ff 100%);box-shadow:0 16px 45px rgba(34,58,90,.045);margin-bottom:14px}.feature-copy{padding:34px 38px;display:flex;flex-direction:column;justify-content:center}.feature-label{display:flex;align-items:center;gap:8px;color:#3979bb;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}.feature-label span{width:6px;height:6px;border-radius:50%;background:#4b9af4}.feature-title{font:700 clamp(21px,2.4vw,29px)/1.24 Manrope,sans-serif;letter-spacing:-.8px;margin:17px 0 12px;max-width:620px}.feature-summary{color:#727b88;font-size:13px;line-height:1.75;max-width:600px}.feature-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:20px;color:#9298a2;font-size:10px}.pill{border:1px solid #dce8f6;color:#4777a8;background:#f4f8fd;padding:5px 9px;border-radius:99px;font-size:9px;font-weight:600}.feature-art{position:relative;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,rgba(137,183,237,.3),transparent 55%),linear-gradient(135deg,#f4f8ff,#eaf1fa)}.orb{width:180px;height:180px;border-radius:50%;position:relative;background:radial-gradient(circle at 33% 27%,#fff 0%,#dcecff 23%,#9fc6f2 48%,#638fbe 70%,#45627f 100%);box-shadow:inset -20px -22px 38px rgba(35,69,110,.25),inset 12px 12px 28px rgba(255,255,255,.9),0 28px 60px rgba(63,111,165,.23);animation:float 7s ease-in-out infinite}.orb:before,.orb:after{content:"";position:absolute;border:1px solid rgba(75,122,178,.24);border-radius:50%;inset:-24px;transform:rotate(-28deg) scaleY(.35)}.orb:after{inset:-43px;transform:rotate(28deg) scaleY(.27);border-color:rgba(75,122,178,.16)}.orb-core{position:absolute;inset:34%;border-radius:50%;background:radial-gradient(circle at 35% 30%,white,#9cc8f5 75%);filter:blur(1px);box-shadow:0 0 30px rgba(255,255,255,.7)}@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+.story-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.story{min-height:205px;border:1px solid #e9ebef;background:rgba(255,255,255,.85);border-radius:18px;padding:21px;display:flex;flex-direction:column;transition:transform .22s,border-color .22s,box-shadow .22s}.story:hover{transform:translateY(-3px);border-color:#d8e4f2;box-shadow:0 14px 32px rgba(32,53,81,.06)}.story-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.category{font-size:9px;font-weight:700;letter-spacing:.65px;text-transform:uppercase;color:#477eaf;background:#f0f6fd;padding:6px 8px;border-radius:7px}.priority{font-size:9px;color:#9298a1}.story h3{font:650 15px/1.42 Manrope,sans-serif;letter-spacing:-.28px;margin:15px 0 8px}.story p{font-size:11px;line-height:1.65;color:#858b95;margin:0 0 15px}.story-foot{margin-top:auto;padding-top:13px;border-top:1px solid #f0f1f4;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10px;color:#9a9fa8}.story-foot a{color:#3f7ebd;font-weight:600}.story-foot a:hover{color:#135da8}
+.empty{grid-column:1/-1;border:1px dashed #dfe3e9;border-radius:18px;padding:54px 20px;text-align:center;color:#8b929d;font-size:13px}.loading{grid-column:1/-1;padding:55px;text-align:center;color:#8b929d;font-size:12px}.spinner{width:25px;height:25px;border:2px solid #e5eaf1;border-top-color:#528dca;border-radius:50%;margin:0 auto 14px;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+.insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.insight-panel{border:1px solid #e8ebf0;border-radius:20px;background:rgba(255,255,255,.85);padding:24px}.panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.panel-title{font:650 15px Manrope,sans-serif;letter-spacing:-.3px}.panel-sub{font-size:10px;color:#9a9fa8;margin-top:4px}.signal-list{display:flex;flex-direction:column;gap:13px}.signal{display:flex;align-items:center;justify-content:space-between;gap:12px}.signal-name{font-size:11px;color:#4d5663}.signal-companies{font-size:10px;color:#9299a3;margin-top:4px}.signal-count{font:700 14px Manrope,sans-serif;color:#4b78a6;background:#f0f6fd;border-radius:10px;padding:8px 10px;min-width:36px;text-align:center}.company-list{display:flex;flex-direction:column;gap:14px}.company-row{display:flex;align-items:center;gap:12px}.company-icon{width:31px;height:31px;border:1px solid #e8ebef;background:#f7f9fc;border-radius:10px;display:grid;place-items:center;font:700 10px Manrope;color:#63748a}.company-info{flex:1;min-width:0}.company-name{font-size:11px;font-weight:600;color:#4a5360}.company-topics{font-size:10px;color:#989ea7;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.company-count{font-size:10px;color:#9298a1}
+.method{margin:48px 0 70px;border:1px solid #e7ebf1;border-radius:22px;padding:25px 28px;background:linear-gradient(120deg,#fff,#f8fbff);display:flex;align-items:center;justify-content:space-between;gap:24px}.method h3{font:650 15px Manrope,sans-serif;margin:0 0 7px}.method p{font-size:11px;line-height:1.7;color:#858c97;margin:0;max-width:750px}.method a{font-size:11px;font-weight:600;color:#3979b7;white-space:nowrap}
+footer{border-top:1px solid #e9ebef;background:rgba(255,255,255,.58);padding:30px 0 36px}.footer-inner{display:flex;justify-content:space-between;gap:22px;align-items:center}.footer-brand{font:800 14px Manrope,sans-serif;letter-spacing:-.4px}.footer-copy{font-size:10px;color:#a0a5ad;line-height:1.7;margin-top:5px}.footer-links{display:flex;gap:20px;font-size:10px;color:#858b95}.footer-links a:hover{color:var(--blue)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#1c2531;color:#fff;padding:11px 16px;border-radius:99px;font-size:11px;box-shadow:var(--shadow);transition:all .25s;z-index:50}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:900px){.shell{padding:0 25px}.story-grid{grid-template-columns:repeat(2,1fr)}.featured{grid-template-columns:1fr .6fr}.feature-copy{padding:28px}.navlinks{gap:18px}}
+@media(max-width:650px){.shell{padding:0 18px}.topbar{height:58px}.navlinks{display:none}.menu-btn{display:block}.edition{display:none}.hero{padding:70px 0 35px}h1{letter-spacing:-3px}.hero-copy{font-size:14px}.metrics{grid-template-columns:repeat(2,1fr)}.metric:nth-child(2):after{display:none}.metric:nth-child(-n+2){border-bottom:1px solid #eceef2}.metric-value{font-size:23px}.section{padding-top:39px}.section-top{align-items:start;flex-direction:column}.toolbar{align-items:stretch;flex-direction:column}.searchbox{width:100%}.featured{grid-template-columns:1fr}.feature-copy{padding:25px}.feature-art{min-height:170px}.orb{width:110px;height:110px}.story-grid{grid-template-columns:1fr}.story{min-height:175px}.insight-grid{grid-template-columns:1fr}.method{align-items:start;flex-direction:column;margin:34px 0 48px}.footer-inner{align-items:start;flex-direction:column}.footer-links{flex-wrap:wrap}.hero-actions{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
-
-  <nav>
-    <div class="nav-logo">Daily AI</div>
-    <ul class="nav-links">
-      <li><span>Today</span></li>
-      <li><span>Research</span></li>
-      <li><span>Industry</span></li>
-      <li><span>Policy</span></li>
-    </ul>
-    <div class="nav-live">
-      <div class="live-dot"></div>
-      <span id="navDate">Live</span>
-    </div>
-  </nav>
-
-  <section class="hero">
-    <p class="hero-eyebrow">Daily AI Intelligence</p>
-    <h1 class="hero-title">The AI news<br>that <span>matters.</span></h1>
-    <p class="hero-sub">Top 10 stories from the world's most trusted sources. Curated fresh every single day.</p>
-    <div class="hero-chip">
-      <i class="ti ti-calendar" style="font-size:14px;"></i>
-      <span id="heroDate">Loading today's edition...</span>
-    </div>
-  </section>
-
-  <div class="main">
-
-    <div class="stats">
-      <div class="stat">
-        <div class="stat-n" id="sCount">—</div>
-        <div class="stat-l">Stories today</div>
-      </div>
-      <div class="stat">
-        <div class="stat-n" id="sCats">—</div>
-        <div class="stat-l">Categories</div>
-      </div>
-      <div class="stat">
-        <div class="stat-n" id="sSrcs">—</div>
-        <div class="stat-l">Sources</div>
-      </div>
-    </div>
-
-    <div class="filters" id="filters"></div>
-
-    <div id="featuredWrap"></div>
-
-    <div class="section-header">
-      <div class="section-title">All Stories</div>
-      <div class="section-count" id="storyCount"></div>
-    </div>
-
-    <div class="grid" id="grid"></div>
-
-  </div>
-
-  <footer>
-    <div class="footer-name">Daily AI</div>
-    <div class="footer-sub">
-      Powered by Claude + Web Search<br>
-      Top 10 AI stories, refreshed every morning automatically.
-    </div>
-  </footer>
-
-  <script>
-    const TAG_COLORS = {
-      Research:  { bg:'#e8f5e9', color:'#2e7d32' },
-      Industry:  { bg:'#fff8e1', color:'#b45309' },
-      Models:    { bg:'#ede7f6', color:'#4527a0' },
-      Policy:    { bg:'#fce4ec', color:'#b71c1c' },
-      Products:  { bg:'#e3f2fd', color:'#0d47a1' },
-      Startups:  { bg:'#fdf2f8', color:'#86198f' },
-    };
-
-    let allArticles = [];
-    let activeTag = 'All';
-
-    function setDate(d) {
-      document.getElementById('heroDate').textContent = d;
-      document.getElementById('navDate').textContent = d;
-    }
-
-    function updateStats(a) {
-      document.getElementById('sCount').textContent = a.length;
-      document.getElementById('sCats').textContent = new Set(a.map(x => x.tag)).size;
-      document.getElementById('sSrcs').textContent = new Set(a.map(x => x.source)).size;
-    }
-
-    function renderFilters(articles) {
-      const tags = ['All', ...new Set(articles.map(a => a.tag))];
-      document.getElementById('filters').innerHTML = tags.map(t => {
-        const n = t === 'All' ? articles.length : articles.filter(a => a.tag === t).length;
-        return `<button class="ftag ${t === activeTag ? 'active' : ''}" onclick="setTag('${t}')">${t} (${n})</button>`;
-      }).join('');
-    }
-
-    function renderFeatured(articles) {
-      const f = activeTag === 'All' ? articles.find(a => a.featured) : null;
-      const wrap = document.getElementById('featuredWrap');
-      if (!f) { wrap.innerHTML = ''; return; }
-      const tc = TAG_COLORS[f.tag] || { bg:'#f5f5f7', color:'#1d1d1f' };
-      wrap.innerHTML = `
-        <a class="card-featured" href="${f.url}" target="_blank" rel="noopener">
-          <div class="feat-body">
-            <div class="feat-label">⭐ Top Story Today</div>
-            <div class="feat-title">${f.title}</div>
-            <div class="feat-summary">${f.summary}</div>
-            <div class="feat-meta">
-              ${f.source}
-              <span style="background:${tc.bg};color:${tc.color};padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;">${f.tag}</span>
-            </div>
-          </div>
-          <div class="feat-arrow"><i class="ti ti-arrow-up-right"></i></div>
-        </a>`;
-    }
-
-    function renderGrid(articles) {
-      const filtered = activeTag === 'All'
-        ? articles.filter(a => !a.featured)
-        : articles.filter(a => a.tag === activeTag);
-
-      document.getElementById('storyCount').textContent = filtered.length + ' stories';
-
-      if (!filtered.length) {
-        document.getElementById('grid').innerHTML =
-          `<div class="state-wrap"><div class="state-title">No stories in this category.</div></div>`;
-        return;
-      }
-
-      document.getElementById('grid').innerHTML = filtered.map(a => {
-        const tc = TAG_COLORS[a.tag] || { bg:'#f5f5f7', color:'#6e6e73' };
-        return `
-          <a class="card" href="${a.url}" target="_blank" rel="noopener">
-            <div>
-              <span class="c-tag" style="background:${tc.bg};color:${tc.color};">${a.tag}</span>
-              <div class="c-title">${a.title}</div>
-              <div class="c-sum">${a.summary}</div>
-            </div>
-            <div class="c-foot">
-              <span class="c-source">${a.source}</span>
-              <span class="c-read">Read <i class="ti ti-arrow-right" style="font-size:12px;"></i></span>
-            </div>
-          </a>`;
-      }).join('');
-    }
-
-    function setTag(tag) {
-      activeTag = tag;
-      renderFilters(allArticles);
-      renderFeatured(allArticles);
-      renderGrid(allArticles);
-    }
-
-    function showLoading() {
-      document.getElementById('featuredWrap').innerHTML = '';
-      document.getElementById('grid').innerHTML = `
-        <div class="state-wrap">
-          <div class="spinner"></div>
-          <div class="state-title">Fetching today's AI news...</div>
-          <div class="state-sub">Scanning TechCrunch, MIT Tech Review,<br>The Verge, VentureBeat, Wired — about 20 seconds.</div>
-        </div>`;
-    }
-
-    async function loadNews() {
-      showLoading();
-      try {
-        const res = await fetch('/api/news');
-        if (!res.ok) throw new Error(`Server error ${res.status}`);
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
-        allArticles = data.articles;
-        setDate(data.date);
-        updateStats(allArticles);
-        renderFilters(allArticles);
-        renderFeatured(allArticles);
-        renderGrid(allArticles);
-      } catch (err) {
-        document.getElementById('grid').innerHTML = `
-          <div class="error-wrap">
-            <i class="ti ti-alert-circle" style="font-size:24px;display:block;margin-bottom:10px;"></i>
-            <strong>Could not load news.</strong><br>
-            <span style="font-size:12px;color:#ef4444;">${err.message}</span>
-          </div>`;
-      }
-    }
-
-    loadNews();
-  </script>
-
+<div class="ambient"></div>
+<header class="topbar"><div class="shell nav">
+<a class="brand" href="#"><span class="brand-mark">F</span><span>FrontierShift</span></a>
+<nav class="navlinks" aria-label="Main navigation"><a href="#discover">Discover</a><a href="#signals">Signals</a><a href="#companies">Companies</a><a href="#methodology">Methodology</a></nav>
+<div class="navright"><span class="edition" id="edition">AI intelligence · 14-day window</span><button class="menu-btn" aria-label="Scroll to discoveries" onclick="document.getElementById('discover').scrollIntoView()">☰</button></div>
+</div></header>
+<main>
+<section class="hero shell">
+<div class="eyebrow"><span class="eyedot"></span> Independent AI ecosystem intelligence</div>
+<h1>Understand what’s<br><span class="headline-gradient">moving AI forward.</span></h1>
+<p class="hero-copy">A clearer view of the research, companies and technologies shaping artificial intelligence. Less noise. More context. Sources you can inspect.</p>
+<div class="hero-actions"><a class="primary-btn" href="#discover">Explore intelligence <span class="arrow">↗</span></a><a class="secondary-btn" href="#signals">View ecosystem signals <span class="arrow">↓</span></a></div>
+<div class="hero-note" id="freshness">Connecting to publisher and research feeds…</div>
+<div class="metrics" aria-label="Coverage summary">
+<div class="metric"><div class="metric-value" id="mStories">—</div><div class="metric-label">Developments tracked</div></div>
+<div class="metric"><div class="metric-value" id="mCompanies">—</div><div class="metric-label">Publishers represented</div></div>
+<div class="metric"><div class="metric-value" id="mTopics">—</div><div class="metric-label">Research themes</div></div>
+<div class="metric"><div class="metric-value" id="mSources">—</div><div class="metric-label">Feeds checked</div></div>
+</div>
+</section>
+<section class="section shell" id="discover">
+<div class="section-top"><div><div class="kicker">The intelligence brief</div><h2 class="section-title">What’s happening in AI</h2><p class="section-desc">Recent developments from monitored publishers and research sources.</p></div><div class="updated" id="updated">Awaiting feed data</div></div>
+<div class="toolbar"><div class="filters" id="filters"><button class="filter active">All developments</button></div><label class="searchbox"><span>⌕</span><input id="search" type="search" placeholder="Search developments…" autocomplete="off"></label></div>
+<div class="featured" id="featured"><div class="feature-copy"><div class="feature-label"><span></span> Featured development</div><h2 class="feature-title">Loading the latest intelligence…</h2><p class="feature-summary">Collecting source-backed developments from AI publishers and research feeds.</p></div><div class="feature-art"><div class="orb"><div class="orb-core"></div></div></div></div>
+<div class="story-grid" id="stories"><div class="loading"><div class="spinner"></div>Loading publisher feeds…</div></div>
+</section>
+<section class="section shell" id="signals">
+<div class="section-top"><div><div class="kicker">Patterns across the ecosystem</div><h2 class="section-title">Signals worth watching</h2><p class="section-desc">Topic activity across the publishers in this collection window.</p></div></div>
+<div class="insight-grid">
+<div class="insight-panel"><div class="panel-head"><div><div class="panel-title">Cross-publisher themes</div><div class="panel-sub">Shared topic tags across monitored feeds</div></div><span class="pill">Topic overlap</span></div><div class="signal-list" id="signalsList"><div class="loading">Building topic signals…</div></div></div>
+<div class="insight-panel" id="companies"><div class="panel-head"><div><div class="panel-title">Publisher activity</div><div class="panel-sub">Organizations represented in recent feeds</div></div><span class="pill">Coverage</span></div><div class="company-list" id="companyList"><div class="loading">Loading publisher profiles…</div></div></div>
+</div>
+<div class="method" id="methodology"><div><h3>Evidence before interpretation.</h3><p>Stories link to their originating publisher or research feed. Topic overlap and priority are discovery aids, not proof of a connection, factual verification, or a prediction. Open the source before relying on a claim.</p></div><a href="https://github.com/raushantiwari24/daily-ai" target="_blank" rel="noopener">Explore the project on GitHub ↗</a></div>
+</section>
+</main>
+<footer><div class="shell footer-inner"><div><div class="footer-brand">FrontierShift</div><div class="footer-copy">An independent AI ecosystem intelligence project.<br>Built around transparent sources and explainable signals.</div></div><div class="footer-links"><a href="#discover">Discover</a><a href="#signals">Signals</a><a href="#methodology">Methodology</a><a href="https://github.com/raushantiwari24/daily-ai" target="_blank" rel="noopener">GitHub ↗</a></div></div></footer>
+<div class="toast" id="toast" role="status"></div>
+<script>
+var allArticles=[],activeFilter="All",searchTerm="";
+function escapeHTML(value){return String(value==null?"":value).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function safeURL(value){try{var u=new URL(value);return (u.protocol==="https:"||u.protocol==="http:")?u.href:"#";}catch(e){return "#";}}
+function shortDate(value){try{return new Intl.DateTimeFormat("en",{month:"short",day:"numeric"}).format(new Date(value));}catch(e){return "";}}
+function showToast(message){var el=document.getElementById("toast");el.textContent=message;el.classList.add("show");setTimeout(function(){el.classList.remove("show");},2400);}
+function renderMetrics(data){document.getElementById("mStories").textContent=data.articles.length;document.getElementById("mCompanies").textContent=data.companies.length;var topics={};data.articles.forEach(function(a){(a.topics||[]).forEach(function(t){topics[t]=1;});});document.getElementById("mTopics").textContent=Object.keys(topics).length;document.getElementById("mSources").textContent=data.sources_checked;var stamp=new Date(data.generated_at);document.getElementById("updated").textContent="Updated "+stamp.toLocaleString("en-IN",{hour:"numeric",minute:"2-digit",day:"numeric",month:"short",timeZone:"Asia/Kolkata"})+" IST";document.getElementById("freshness").textContent="Source feeds checked · "+data.window_days+"-day collection window · "+(data.sources_failed.length?data.sources_failed.length+" feed(s) unavailable":"All monitored feeds responded");}
+function renderFilters(){var tags=["All"].concat(Array.from(new Set(allArticles.map(function(a){return a.category;}))).sort());document.getElementById("filters").innerHTML=tags.map(function(tag){var count=tag==="All"?allArticles.length:allArticles.filter(function(a){return a.category===tag;}).length;return '<button class="filter '+(activeFilter===tag?"active":"")+'" data-filter="'+escapeHTML(tag)+'">'+escapeHTML(tag==="All"?"All developments":tag)+" <span>"+count+"</span></button>";}).join("");}
+function visibleArticles(){return allArticles.filter(function(a){var matchesTag=activeFilter==="All"||a.category===activeFilter;var hay=(a.title+" "+a.summary+" "+a.source+" "+a.category).toLowerCase();return matchesTag&&hay.indexOf(searchTerm.toLowerCase())!==-1;});}
+function renderFeatured(){var item=allArticles[0];var el=document.getElementById("featured");if(!item){el.style.display="none";return;}el.style.display="grid";el.innerHTML='<div class="feature-copy"><div class="feature-label"><span></span> Featured development · '+escapeHTML(item.category)+'</div><h2 class="feature-title">'+escapeHTML(item.title)+'</h2><p class="feature-summary">'+escapeHTML(item.summary||"Open the original source for the full announcement and context.")+'</p><div class="feature-meta"><span>'+escapeHTML(item.source)+'</span><span>·</span><span>'+escapeHTML(item.date_label)+'</span><span class="pill">'+escapeHTML(item.evidence)+'</span><span class="pill">'+escapeHTML(item.priority)+' priority</span></div><div style="margin-top:20px"><a class="primary-btn" href="'+safeURL(item.url)+'" target="_blank" rel="noopener">Read original source <span class="arrow">↗</span></a></div></div><div class="feature-art" aria-hidden="true"><div class="orb"><div class="orb-core"></div></div></div>';}
+function renderStories(){var items=visibleArticles();var list=items.filter(function(a){return a.id!==allArticles[0]?.id;});var grid=document.getElementById("stories");if(!list.length){grid.innerHTML='<div class="empty">No developments match this view. Try another category or search term.</div>';return;}grid.innerHTML=list.map(function(a){return '<article class="story"><div class="story-top"><span class="category">'+escapeHTML(a.category)+'</span><span class="priority">'+escapeHTML(a.priority)+' · '+a.priority_score+'/100</span></div><h3>'+escapeHTML(a.title)+'</h3><p>'+escapeHTML(a.summary||"Open the source for more information.")+'</p><div class="story-foot"><span>'+escapeHTML(a.source)+' · '+escapeHTML(shortDate(a.date))+'</span><a href="'+safeURL(a.url)+'" target="_blank" rel="noopener">Source ↗</a></div></article>';}).join("");}
+function renderSignals(data){var list=document.getElementById("signalsList");if(!data.convergence.length){list.innerHTML='<div class="empty">Not enough overlapping topic activity to show a cross-publisher signal yet.</div>';}else{list.innerHTML=data.convergence.map(function(s){return '<div class="signal"><div><div class="signal-name">'+escapeHTML(s.topic)+'</div><div class="signal-companies">'+escapeHTML(s.companies.join(" · "))+'</div></div><div class="signal-count">'+s.count+'</div></div>';}).join("");}
+var companies=document.getElementById("companyList");companies.innerHTML=data.companies.slice(0,7).map(function(c){var initials=c.company.split(/\s+/).map(function(w){return w.charAt(0);}).join("").slice(0,2).toUpperCase();var topics=c.topics.map(function(t){return t.name;}).join(" · ")||"Recent publisher updates";return '<div class="company-row"><div class="company-icon">'+escapeHTML(initials)+'</div><div class="company-info"><div class="company-name">'+escapeHTML(c.company)+'</div><div class="company-topics">'+escapeHTML(topics)+'</div></div><div class="company-count">'+c.stories+' tags</div></div>';}).join("")||'<div class="empty">No publisher activity available.</div>';}
+function load(){fetch("/api/news").then(function(response){if(!response.ok)throw new Error("Feed service returned "+response.status);return response.json();}).then(function(data){if(data.error)throw new Error(data.error);allArticles=data.articles||[];renderMetrics(data);renderFilters();renderFeatured();renderStories();renderSignals(data);if(!allArticles.length)showToast("No recent feed items were returned.");}).catch(function(error){document.getElementById("stories").innerHTML='<div class="empty">The live intelligence feed is temporarily unavailable. Please try again shortly.<br><br><span style="font-size:11px">'+escapeHTML(error.message)+'</span></div>';document.getElementById("freshness").textContent="Feed connection unavailable";});}
+document.getElementById("filters").addEventListener("click",function(event){var button=event.target.closest("[data-filter]");if(!button)return;activeFilter=button.getAttribute("data-filter");renderFilters();renderStories();});
+document.getElementById("search").addEventListener("input",function(event){searchTerm=event.target.value;renderStories();});
+load();
+</script>
 </body>
 </html>
