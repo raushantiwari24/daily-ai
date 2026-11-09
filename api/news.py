@@ -1,3 +1,4 @@
+import hashlib
 import json
 import re
 import time
@@ -87,7 +88,7 @@ def fetch_feed(feed):
             title = clean(node_text(node, ["title"]))
             link = node_text(node, ["link"])
             date_raw = node_text(node, ["pubDate", "published", "updated"])
-            description = clean(node_text(node, ["description", "content:encoded"]))
+            description = clean(node_text(node, ["description", "{http://purl.org/rss/1.0/modules/content/}encoded"]))
         published = date_value(date_raw)
         if not title or not link or not published or published < cutoff:
             continue
@@ -95,7 +96,7 @@ def fetch_feed(feed):
         if parsed.scheme not in ("http", "https") or not parsed.netloc:
             continue
         results.append({
-            "id": str(abs(hash(link))),
+            "id": hashlib.sha1(link.encode("utf-8")).hexdigest()[:16],
             "title": title[:260],
             "summary": description[:650],
             "url": link,
