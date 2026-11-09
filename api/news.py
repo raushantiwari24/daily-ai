@@ -28,6 +28,7 @@ TOPICS = {
     "Agents": ("agent", "tool use", "workflow"),
     "Multimodal": ("multimodal", "image", "video", "audio", "speech"),
     "Coding": ("coding", "code", "developer", "software", "programming"),
+    "Models": ("model", "llm", "weights"),
     "Open models": ("open source", "open-source", "open weights", "open-weight"),
     "Infrastructure": ("gpu", "chip", "inference", "compute", "datacenter"),
     "Safety": ("safety", "alignment", "security", "red team"),
