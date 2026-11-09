@@ -13,7 +13,8 @@ An automated weekly AI-industry intelligence pipeline that ingests first-party p
 3. Normalizes dates and URLs, then computes headline-similarity clusters, distinct-host corroboration counts, evidence labels, and a transparent 0-100 prioritization heuristic.
 4. Sends the source records and evidence metadata to Gemini 3.5 Flash-Lite for synthesis.
 5. Validates response structure, exact source URLs, and dates before publication.
-6. Publishes the digest to Notion with evidence labels, importance bands, source links, and explicit limitations.
+6. Applies a conservative lexical-overlap triage check between generated summaries and feed title/description snippets. This flags weakly supported wording; it is not factual verification.
+7. Publishes the digest to Notion with evidence labels, priority bands, snippet-overlap signals, source links, and explicit limitations.
 
 ## Monitored organizations
 
@@ -43,7 +44,7 @@ GitHub Actions (weekly schedule / manual run)
 ## Reliability and known limitations
 
 - **Citation integrity:** A generated development is only retained when its URL exactly matches a collected feed item and its date matches that item.
-- **Not independent fact-checking:** A matching URL proves provenance to a feed record, not that every sentence in the AI summary is true. Open the original article before relying on a claim.
+- **Not independent fact-checking:** A matching URL proves provenance to a feed record, not that every sentence in the AI summary is true. The lexical-overlap check is a triage heuristic, not semantic entailment or truth verification. Human review of original sources remains necessary.
 - **Source coverage:** First-party feeds are curated, not exhaustive. Feed outages and publisher format changes can reduce coverage. Secondary Google News discovery can miss announcements, include duplicate syndication, or surface low-quality coverage.
 - **Corroboration is heuristic:** Similarity clusters and distinct-host counts are triage signals. They do not prove that publishers are independent or that every claim is true.
 - **Importance score:** A transparent heuristic based on source type, topic keywords, corroboration and recency. It is for prioritization, not an objective measure of truth.
@@ -81,7 +82,7 @@ README.md
 
 - Add robust publisher-specific sitemap/page adapters for companies without stable RSS feeds.
 - Resolve syndicated links to original publisher URLs and detect shared wire-service sources.
-- Add claim-level extraction and evidence matching against source article text.
+- Add source-page extraction and claim-level semantic evidence review with human adjudication.
 - Add automated unit tests, integration fixtures, and a preview/dry-run mode before publishing.
 - Persist structured developments to a Notion database for longitudinal trend analysis.
 - Publish structured entries into the AI Updates Tracker database as well as the weekly briefing page.
