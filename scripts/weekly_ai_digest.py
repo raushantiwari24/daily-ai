@@ -38,9 +38,29 @@ COMPANIES = [
 
 def request(url: str, *, data: bytes | None = None, headers: dict[str, str] | None = None,
             method: str = "GET", timeout: int = 30) -> bytes:
-    req = urllib.request.Request(url, data=data, headers=headers or {}, method=method)
-    with urllib.request.urlopen(req, timeout=timeout) as response:
-        return response.read()
+    """HTTP helper with bounded retries and actionable API error messages."""
+    retryable = {429, 500, 502, 503, 504}
+    for attempt in range(4):
+        req = urllib.request.Request(
+            url, data=data, headers=headers or {"User-Agent": "WeeklyAIIntelligenceBot/2.0"},
+            method=method,
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as response:
+                return response.read()
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")[:1200]
+            if exc.code in retryable and attempt < 3:
+                time.sleep(min(2 ** attempt, 8))
+                continue
+            raise RuntimeError(
+                f"HTTP {exc.code} from {urllib.parse.urlsplit(url).netloc}: {detail}"
+            ) from exc
+        except (urllib.error.URLError, TimeoutError) as exc:
+            if attempt == 3:
+                raise RuntimeError(f"Network request failed for {urllib.parse.urlsplit(url).netloc}: {exc}") from exc
+            time.sleep(min(2 ** attempt, 8))
+    raise RuntimeError("HTTP request exhausted retries.")
 
 def parse_date(value: str) -> datetime | None:
     if not value:
@@ -147,8 +167,63 @@ Feed items:
     raw = request(endpoint, data=body, method="POST",
                   headers={"Content-Type": "application/json"}, timeout=90)
     response = json.loads(raw)
-    text = response["candidates"][0]["content"]["parts"][0]["text"]
-    return json.loads(text)
+    try:
+        candidate_text = response["candidates"][0]["content"]["parts"][0]["text"]
+        digest = json.loads(candidate_text)
+    except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+        raise RuntimeError(
+            "Gemini returned an unexpected or invalid JSON response. "
+            "Check model/API access and the response in the Actions log."
+        ) from exc
+    return validate_digest(digest, updates)
+
+
+def validate_digest(digest: Any, updates: list[dict[str, str]]) -> dict[str, Any]:
+    """Reject malformed model output and any citation URL not present in collected feeds."""
+    if not isinstance(digest, dict):
+        raise RuntimeError("Gemini output must be a JSON object.")
+    required_text = ("headline", "executive_summary", "bottom_line")
+    for field in required_text:
+        if not isinstance(digest.get(field), str) or not digest[field].strip():
+            raise RuntimeError(f"Gemini output is missing required text field: {field}")
+
+    allowed_urls = {item["url"] for item in updates}
+    entries = digest.get("top_developments", [])
+    if not isinstance(entries, list):
+        raise RuntimeError("Gemini top_developments must be a list.")
+    if len(entries) > 12:
+        entries = entries[:12]
+
+    clean_entries = []
+    for index, entry in enumerate(entries, start=1):
+        if not isinstance(entry, dict):
+            continue
+        url = str(entry.get("url", "")).strip()
+        if url not in allowed_urls:
+            print(f"[WARN] Dropping development {index}: URL was not in the collected feed.", file=sys.stderr)
+            continue
+        date = str(entry.get("date", "")).strip()
+        if not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}", date):
+            print(f"[WARN] Dropping development {index}: invalid date.", file=sys.stderr)
+            continue
+        title = str(entry.get("title", "")).strip()
+        summary = str(entry.get("summary", "")).strip()
+        if not title or not summary:
+            continue
+        clean_entries.append({
+            "title": title[:240],
+            "company": str(entry.get("company", "Unknown"))[:100],
+            "date": date,
+            "summary": summary[:900],
+            "why_it_matters": str(entry.get("why_it_matters", "Implications are uncertain."))[:500],
+            "url": url,
+        })
+    digest["top_developments"] = clean_entries
+    for field in ("company_notes", "watch_next_week"):
+        value = digest.get(field, [])
+        digest[field] = [str(item)[:500] for item in value[:15]] if isinstance(value, list) else []
+    print(f"Validated {len(clean_entries)} developments against {len(allowed_urls)} collected source URLs.")
+    return digest
 
 def notion_rich_text(text: str, url: str | None = None) -> dict[str, Any]:
     item: dict[str, Any] = {"type": "text", "text": {"content": str(text)[:1900]}}
