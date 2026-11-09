@@ -26,6 +26,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Validate Python syntax
+        run: python -m py_compile scripts/weekly_ai_digest.py
+
       - name: Generate and publish the weekly digest
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
