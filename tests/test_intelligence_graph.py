@@ -23,6 +23,14 @@ class IntelligenceGraphTests(unittest.TestCase):
         self.assertEqual(reasoning["company_count"], 2)
         self.assertEqual(len(result["event_nodes"]), 3)
 
+    def test_publisher_aliases_do_not_fake_cross_company_convergence(self):
+        items = [
+            {"publisher": "Google AI", "title": "Reasoning model update", "url": "https://blog.google/a"},
+            {"publisher": "Google DeepMind", "title": "Reasoning research update", "url": "https://deepmind.google/b"},
+        ]
+        result = build_ecosystem_signals(items)
+        self.assertEqual(result["topic_company_convergence"], [])
+
     def test_empty_input_is_valid(self):
         self.assertEqual(build_ecosystem_signals([])["items_analyzed"], 0)
 
