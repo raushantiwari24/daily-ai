@@ -187,7 +187,8 @@ def validate_digest(digest: Any, updates: list[dict[str, str]]) -> dict[str, Any
         if not isinstance(digest.get(field), str) or not digest[field].strip():
             raise RuntimeError(f"Gemini output is missing required text field: {field}")
 
-    allowed_urls = {item["url"] for item in updates}
+    allowed_items = {item["url"]: item for item in updates}
+    allowed_urls = set(allowed_items)
     entries = digest.get("top_developments", [])
     if not isinstance(entries, list):
         raise RuntimeError("Gemini top_developments must be a list.")
@@ -205,6 +206,9 @@ def validate_digest(digest: Any, updates: list[dict[str, str]]) -> dict[str, Any
         date = str(entry.get("date", "")).strip()
         if not re.fullmatch(r"\\d{4}-\\d{2}-\\d{2}", date):
             print(f"[WARN] Dropping development {index}: invalid date.", file=sys.stderr)
+            continue
+        if date != allowed_items[url]["date"]:
+            print(f"[WARN] Dropping development {index}: date does not match its source item.", file=sys.stderr)
             continue
         title = str(entry.get("title", "")).strip()
         summary = str(entry.get("summary", "")).strip()
