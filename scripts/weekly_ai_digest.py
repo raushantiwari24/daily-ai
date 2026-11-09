@@ -16,7 +16,7 @@ import xml.etree.ElementTree as ET
 
 from source_registry import collect_intelligence
 from evidence_checks import assess_summary_support
-from intelligence_graph import build_ecosystem_signals, event_key
+from intelligence_graph import build_ecosystem_signals, event_key, canonical_company
 from datetime import datetime, timedelta, timezone
 from html import unescape
 from typing import Any
@@ -282,14 +282,15 @@ def sync_tracker(entries: list[dict[str, Any]]) -> tuple[int, int]:
     created = updated = 0
     company_options = {
         "openai": "OpenAI", "anthropic": "Anthropic", "google": "Google",
-        "google / gemini": "Google", "google deepmind": "Google",
+        "google / gemini": "Google", "google deepmind": "Google", "google ai": "Google", "google research": "Google",
         "xai / grok": "xAI", "xai": "xAI", "meta / llama": "Meta",
         "meta": "Meta", "deepseek": "DeepSeek", "mistral ai": "Mistral",
-        "mistral": "Mistral", "microsoft": "Microsoft",
+        "mistral": "Mistral", "microsoft": "Microsoft", "hugging face": "Hugging Face", "nvidia": "NVIDIA", "aws machine learning": "AWS", "aws": "AWS", "research community": "Research community",
     }
     for entry in entries:
-        key = event_key(entry)
-        company_raw = str(entry.get("company", "Other"))
+        source_item = next((item for item in CURRENT_UPDATES if item.get("url") == entry.get("url")), entry)
+        key = event_key(source_item)
+        company_raw = canonical_company(str(source_item.get("publisher") or source_item.get("company") or entry.get("company", "Other")))
         company = company_options.get(company_raw.lower(), "Other")
         text = f"{entry.get('title', '')} {entry.get('summary', '')}".lower()
         if any(term in text for term in ("benchmark", "evaluation", "leaderboard")):
