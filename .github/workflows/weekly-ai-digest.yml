@@ -28,7 +28,7 @@ jobs:
 
       - name: Validate Python syntax
         run: |
-          python -m py_compile scripts/weekly_ai_digest.py scripts/source_registry.py
+          python -m py_compile scripts/weekly_ai_digest.py scripts/source_registry.py scripts/evidence_checks.py scripts/intelligence_graph.py
           python -m unittest discover -s tests -v
 
       - name: Generate and publish the weekly digest
